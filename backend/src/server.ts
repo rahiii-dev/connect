@@ -17,6 +17,8 @@ app.use(express.json());
 connectDB();
 
 // Root Route
+import authRoutes from './routes/authRoutes';
+
 app.get('/', (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     res.json('Chat Box is on Developing Mode 💻');
@@ -25,6 +27,8 @@ app.get('/', (req, res) => {
     res.json('Chat Box is Online :)');
   }
 });
+
+app.use('/api/auth', authRoutes)
 
 app.use(notFound);
 app.use(errorHandler);
