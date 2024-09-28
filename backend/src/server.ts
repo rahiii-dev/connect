@@ -1,6 +1,7 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import connectDB from './config/db';
 import dotenv from 'dotenv';
+import morgan from 'morgan';
 import errorHandler, { notFound } from './middleware/errorMIddleware';
 
 dotenv.config();
@@ -9,7 +10,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined'));
+} else {
+  app.use(morgan('dev'));
+}
+
 app.use(express.json());
+app.use(express.urlencoded({extended : true}));
 
 // Routes
 
