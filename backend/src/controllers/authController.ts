@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import AuthService from '../services/authService';
 import { sendSuccessResponse } from '../utils/responseUtils';
 import { clearToken } from '../utils/jwtUtils';
@@ -10,7 +10,7 @@ class AuthController {
      * @desc    Register a new user
      * @access  Public
      */
-    register = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
         const { fullName, email, password } = req.body;
 
         const userData = await AuthService.register(fullName, email, password, res);
@@ -23,7 +23,7 @@ class AuthController {
      * @desc    Login a user
      * @access  Public
      */
-    login = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
         const { email, password } = req.body;
 
         const userData = await AuthService.login(email, password, res);
@@ -36,9 +36,8 @@ class AuthController {
      * @desc    Logout a user (clears access and refresh tokens)
      * @access  Private
      */
-    logout = asyncHandler(async (_: Request, res: Response, next: NextFunction): Promise<void> => {
+    logout = asyncHandler(async (_: Request, res: Response): Promise<void> => {
         clearToken(res);
-
         sendSuccessResponse(res, {}, 'User logged out successfully', 200);
     });
 }

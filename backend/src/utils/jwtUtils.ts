@@ -6,7 +6,7 @@ interface CustomJwtPayload extends JwtPayload {
 }
 
 export const generateAccessToken = (userId: string, res: Response) => {
-    const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: '15m' })
+    const accessToken = jwt.sign({ userId }, process.env.JWT_ACCESS_SECRET || '', { expiresIn: '15m' })
 
     res.cookie('accessToken', accessToken, {
         httpOnly: true,
@@ -19,7 +19,7 @@ export const generateAccessToken = (userId: string, res: Response) => {
 };
 
 export const generateRefreshToken = (userId: string, res: Response) => {
-    const refreshToken =  jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: '7d' });
+    const refreshToken =  jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET || '', { expiresIn: '7d' });
 
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -36,9 +36,16 @@ export const clearToken = (res: Response) => {
     res.clearCookie('refreshToken');
 }
 
-export const verifyToken = (token: string): CustomJwtPayload | null => {
+export const verifyToken = (token: string, type: 'access' | 'refresh'): CustomJwtPayload | null => {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as CustomJwtPayload;
+        let secret = '';
+        if(type === 'access') {
+            secret =  process.env.JWT_ACCESS_SECRET || '';
+        } else if(type === 'refresh') {
+            secret = process.env.JWT_REFRESH_SECRET || '';
+        } 
+
+        const decoded = jwt.verify(token, secret) as CustomJwtPayload;
         return decoded;
     } catch (error) {
         return null; 

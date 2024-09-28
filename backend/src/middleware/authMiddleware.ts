@@ -10,15 +10,16 @@ interface AuthenticatedRequest extends Request {
 
 const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+        const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
 
         if (!token) {
             return sendErrorResponse(res, {}, 'No access token found, authorization denied', 401);
         }
 
-        const decoded = verifyToken(token);
+        const decoded = verifyToken(token, 'access');
 
         if (decoded) {
+            
             const user = await UserRepository.findById(decoded.userId);
             if (!user) {
                 return sendErrorResponse(res, {}, 'User not found', 404);
@@ -27,18 +28,18 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
             return next();
         }
 
-        const refreshToken = req.cookies.refreshToken || req.header('x-refresh-token');
+        const refreshToken = req.cookies?.refreshToken || req.header('x-refresh-token');
 
         if (!refreshToken) {
             return sendErrorResponse(res, {}, 'No refresh token found, please log in again', 401);
         }
 
-        const refreshDecoded = verifyToken(refreshToken);
+        const refreshDecoded = verifyToken(refreshToken, 'refresh');
         if (!refreshDecoded) {
             return sendErrorResponse(res, {}, 'Invalid refresh token', 403);
         }
 
-        const newAccessToken = generateAccessToken(refreshDecoded.userId, res);
+        generateAccessToken(refreshDecoded.userId, res);
 
         const user = await UserRepository.findById(refreshDecoded.userId);
         if (!user) {
