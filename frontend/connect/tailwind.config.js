@@ -24,6 +24,9 @@ export default {
         'blue-accent': '#007aff', 
         'dark-text': '#eaeaea',
       },
+      backgroundImage: {
+        'blue-gradient': 'linear-gradient(to right, #007aff, #00c6ff)',
+      },
     },
   },
   plugins: [],

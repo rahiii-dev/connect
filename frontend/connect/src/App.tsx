@@ -2,6 +2,7 @@ import {Route, Routes} from 'react-router-dom';
 import ChatPage from './pages/ChatPage';
 import AuthPage from './pages/AuthPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
 
@@ -9,6 +10,7 @@ function App() {
     <Routes>
       <Route path='/' element={<ChatPage />}/>
       <Route path='/auth' element={<AuthPage />}/>
+      <Route path='/profile' element={<ProfilePage />}/>
       <Route path='*' element={<NotFoundPage />}/>
     </Routes>
   )

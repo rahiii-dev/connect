@@ -1,6 +1,6 @@
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, CircularProgress} from '@mui/material';
+import { TextField, Button, CircularProgress } from '@mui/material';
 import PasswordInput from './PasswordInput';
 
 const validationSchema = Yup.object({
@@ -10,7 +10,7 @@ const validationSchema = Yup.object({
 
 const LoginForm = () => {
 
-    const handleSubmit = async (values: {email: string, password: string}, { setSubmitting, resetForm} : {setSubmitting : (isSubmitting: boolean) => void, resetForm: () => void}) => {
+    const handleSubmit = async (values: { email: string, password: string }, { setSubmitting, resetForm }: { setSubmitting: (isSubmitting: boolean) => void, resetForm: () => void }) => {
         console.log(values);
         setSubmitting(false);
         resetForm();
@@ -48,15 +48,18 @@ const LoginForm = () => {
                         />
                     </div>
 
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        disabled={isSubmitting}
-                        endIcon={isSubmitting ? <CircularProgress size={20}/> : null}
-                    >
-                        {isSubmitting ? 'Logging In...' : 'Login'}
-                    </Button>
+                    <div>
+                        <Button
+                            fullWidth
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            disabled={isSubmitting}
+                            endIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+                        >
+                            {isSubmitting ? 'Logging In...' : 'Login'}
+                        </Button>
+                    </div>
                 </Form>
             )}
         </Formik>

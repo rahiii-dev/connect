@@ -2,6 +2,7 @@ import { Button, CircularProgress, TextField } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import PasswordInput from './PasswordInput';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email").required("Email is required"),
@@ -15,11 +16,13 @@ const validationSchema = Yup.object({
 });
 
 const RegisterForm = () => {
+    const navigate = useNavigate();
 
     const handleSubmit = async (values: {email: string, password: string, confirmPassword: string}, { setSubmitting, resetForm} : {setSubmitting : (isSubmitting: boolean) => void, resetForm: () => void}) => {
         console.log(values);
         setSubmitting(false);
         resetForm();
+        navigate('/profile')
     }
 
 
@@ -67,15 +70,18 @@ const RegisterForm = () => {
                         />
                     </div>
 
-                    <Button
-                        type='submit'
-                        variant='contained'
-                        color='primary'
-                        disabled={isSubmitting}
-                        endIcon={isSubmitting ? <CircularProgress size={20}/> : null}
-                    >
-                        {isSubmitting ? 'Creating Account...' : 'Register'}
-                    </Button>
+                    <div>
+                        <Button
+                            fullWidth
+                            type='submit'
+                            variant='contained'
+                            color='primary'
+                            disabled={isSubmitting}
+                            endIcon={isSubmitting ? <CircularProgress size={20}/> : null}
+                        >
+                            {isSubmitting ? 'Creating Account...' : 'Register'}
+                        </Button>
+                    </div>
                 </Form>
             )}
         </Formik>

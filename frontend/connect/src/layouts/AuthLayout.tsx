@@ -12,7 +12,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             {/* Left side with Lottie animation */}
             <div className="hidden lg:block lg:w-1/2 h-full">
                 <div className="flex flex-col justify-center items-center py-10 h-full">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-accent to-gray-400 tracking-wide drop-shadow-lg">
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-blue-gradient tracking-wide drop-shadow-lg">
                         Connect
                     </h1>
                     <h2 className="text-sm text-gray-300 mt-2">
