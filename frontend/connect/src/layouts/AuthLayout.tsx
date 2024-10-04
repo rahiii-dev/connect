@@ -13,10 +13,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             <div className="hidden lg:block lg:w-1/2 h-full">
                 <div className="flex flex-col justify-center items-center py-10 h-full">
                     <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-accent to-gray-400 tracking-wide drop-shadow-lg">
-                        Chat Box
+                        Connect
                     </h1>
                     <h2 className="text-sm text-gray-300 mt-2">
-                        Connect and chat with your friends
+                        Chat Effortlessly, Anytime, Anywhere
                     </h2>
                     <Lottie animationData={sphere} loop={true} className="w-2/3 mt-4" />
                 </div>

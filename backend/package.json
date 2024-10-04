@@ -1,5 +1,5 @@
 {
-  "name": "chatbox",
+  "name": "connect",
   "version": "1.0.0",
   "description": "A chat app were users can join rooms and chat",
   "main": "server.js",
