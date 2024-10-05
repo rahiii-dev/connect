@@ -1,8 +1,9 @@
-import { Button, CircularProgress, TextField } from '@mui/material';
+import { Button, CircularProgress, FormHelperText, TextField } from '@mui/material';
 import { Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import PasswordInput from './PasswordInput';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email").required("Email is required"),
@@ -16,15 +17,8 @@ const validationSchema = Yup.object({
 });
 
 const RegisterForm = () => {
+    const { register, error} = useAuthStore();
     const navigate = useNavigate();
-
-    const handleSubmit = async (values: {email: string, password: string, confirmPassword: string}, { setSubmitting, resetForm} : {setSubmitting : (isSubmitting: boolean) => void, resetForm: () => void}) => {
-        console.log(values);
-        setSubmitting(false);
-        resetForm();
-        navigate('/profile')
-    }
-
 
     return (
         <Formik initialValues={{
@@ -32,7 +26,17 @@ const RegisterForm = () => {
             password: '',
             confirmPassword: ''
         }} 
-        onSubmit={handleSubmit} 
+        onSubmit={async (values, {setSubmitting, resetForm}) => {
+            try {
+                await register(({email: values.email, password: values.password}));
+                resetForm(); 
+                navigate('/profile', {replace: true})
+            } catch (error) {
+                resetForm({values: {email : values.email, password: '', confirmPassword: ''}});
+            } finally {
+                setSubmitting(false);
+            }
+        }} 
         validationSchema={validationSchema}>
             {({ isSubmitting, errors, touched, handleChange, handleBlur, values }) => (
                 <Form>
@@ -68,6 +72,7 @@ const RegisterForm = () => {
                             error={touched.confirmPassword && !!errors.confirmPassword}
                             helperText={touched.confirmPassword && errors.confirmPassword}
                         />
+                        {error && <FormHelperText error>{error}</FormHelperText>}
                     </div>
 
                     <div>

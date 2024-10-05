@@ -1,30 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar, Button, TextField, Box, CircularProgress, MenuItem, FormControl, InputLabel, Select, FormHelperText } from '@mui/material';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { AVATAR_URL } from '../../utils/constants';
-import { useNavigate } from 'react-router-dom';
+import { verifyUsername } from '../../api/profile';
+import { useProfileStore } from '../../store/useProfileStore';
 
 // Validation Schema
 const ProfileSchema = Yup.object().shape({
     username: Yup.string().required('Username is required')
         .min(3, 'Username must be at least 3 characters')
-        .max(10, "Username can't be more than 10 characters"),
+        .max(10, "Username can't be more than 10 characters")
+        .matches(/^[A-Za-z0-9](?!.*__)[A-Za-z0-9_.]*$/, 'Username can only contain alphabets, numbers, underscores, and dots, and cannot start with an underscore')
+        .test('checkUsernameExists', 'Username already exists', async (value) => {
+            if (!value) return true; 
+            const response = await verifyUsername(value);
+            return !response.exists;
+        }),
     bio: Yup.string().max(160, 'Bio must be at most 160 characters'),
     gender: Yup.string().required('Gender is required'),
 });
 
-// type ProfileFormProps = {
-//     avatar
-// }
-
-const ProfileForm = ({ user }) => {
-    const [avatar, setAvatar] = useState(user?.avatarUrl || AVATAR_URL);
-    const [loading, setLoading] = useState(false);
+const ProfileForm = () => {
+    const { createOrUpdateProfile, profile, loading } = useProfileStore();
+    const [avatar, setAvatar] = useState(profile?.avatarUrl || AVATAR_URL);
     const [avatarLoading, setAvatarLoading] = useState(false);
-    const [imageSelected, setImageSelected] = useState(false); 
-
-    const navigate = useNavigate();
+    const [imageSelected, setImageSelected] = useState(false);
+    const [imageChanged, setImageChanged] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files ? e.target.files[0] : null;
@@ -32,6 +34,7 @@ const ProfileForm = ({ user }) => {
             const newAvatarUrl = URL.createObjectURL(file);
             setAvatar(newAvatarUrl); 
             setImageSelected(true);
+            setImageChanged(true)
         }
     };
 
@@ -44,25 +47,8 @@ const ProfileForm = ({ user }) => {
         }
     };
 
-    const handleImageLoad = () => {
-        setAvatarLoading(false); 
-    };
-
-    const handleImageError = () => {
-        setAvatarLoading(false);  
-        setAvatar(AVATAR_URL);   
-    };
-
-    // Handle form submission
-    const handleSubmit = (values, { setSubmitting }) => {
-        setLoading(true);
-        setTimeout(() => {
-            setSubmitting(false);
-            setLoading(false);
-            console.log('Profile updated:', values);
-            navigate('/')
-        }, 2000);
-    };
+    const handleImageLoad = () => setAvatarLoading(false);
+    const handleImageError = () => setAvatarLoading(false);
 
     return (
         <Box component={'section'} className="flex flex-col items-center w-full lg:w-1/2 min-h-[100vh] py-10 mx-auto shadow-lg rounded-md">
@@ -89,91 +75,109 @@ const ProfileForm = ({ user }) => {
                 <p className='text-gray-400 text-sm text-center'>click to upload</p>
             </div>
 
-            {/* Formik Form */}
             <Formik
                 initialValues={{
-                    username: user?.username || '',
-                    bio: user?.bio || '',
-                    gender: user?.gender || '',
+                    username: '',
+                    bio: '',
+                    gender: '',
                 }}
                 validationSchema={ProfileSchema}
-                onSubmit={handleSubmit}
+                onSubmit={async (values, { setSubmitting }) => {
+                     setSubmitting(true);
+                     await createOrUpdateProfile({ ...values, avatarUrl: avatar, gender: values.gender === 'male' ? 'male' : 'female' });
+                     setSubmitting(false);
+                }}
             >
-                {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) => (
-                    <Form className="w-full space-y-4">
-                        <div className="mb-4">
-                            <TextField
-                                fullWidth
-                                id="username"
-                                name="username"
-                                label="Username"
-                                value={values.username}
-                                onChange={(e) => {
-                                    handleChange(e); 
-                                    updateAvatarUrl(e.target.value, values.gender); 
-                                }}
-                                onBlur={handleBlur}
-                                error={touched.username && !!errors.username}
-                                helperText={touched.username && errors.username}
-                                variant="outlined"
-                            />
-                        </div>
+                {({ values, errors, touched, handleChange, handleBlur, isSubmitting, setValues }) => {
 
-                        {/* Bio Field */}
-                        <div className="mb-4">
-                            <TextField
-                                fullWidth
-                                id="bio"
-                                name="bio"
-                                label="Bio"
-                                value={values.bio}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                error={touched.bio && !!errors.bio}
-                                helperText={touched.bio && errors.bio}
-                                multiline
-                                rows={4}
-                                variant="outlined"
-                            />
-                        </div>
+                    useEffect(() => {
+                        if (profile) {
+                            setValues({
+                                username: profile.username || '',
+                                bio: profile.bio || '',
+                                gender: profile.gender || '',
+                            });
+                            setAvatar(profile.avatarUrl || AVATAR_URL);
+                            setImageSelected(true)
+                        }
+                    }, [profile, setValues]); 
 
-                        {/* Gender Select */}
-                        <div className="mb-4">
-                            <FormControl fullWidth variant="outlined" error={touched.gender && !!errors.gender}>
-                                <InputLabel id="gender-label">Gender</InputLabel>
-                                <Select
-                                    labelId="gender-label"
-                                    id="gender"
-                                    name="gender"
-                                    value={values.gender}
+                    return (
+                        <Form className="w-full space-y-4">
+                            <div className="mb-4">
+                                <TextField
+                                    fullWidth
+                                    id="username"
+                                    name="username"
+                                    label="Username"
+                                    value={values.username}
                                     onChange={(e) => {
                                         handleChange(e); 
-                                        updateAvatarUrl(values.username, e.target.value);
+                                        updateAvatarUrl(e.target.value, values.gender); 
                                     }}
                                     onBlur={handleBlur}
-                                    label="Gender"
-                                >
-                                    <MenuItem value="male">Male</MenuItem>
-                                    <MenuItem value="female">Female</MenuItem>
-                                </Select>
-                                {touched.gender && errors.gender && <FormHelperText error={true}>{touched.gender && errors.gender}</FormHelperText>}
-                            </FormControl>
-                        </div>
+                                    error={touched.username && !!errors.username}
+                                    helperText={touched.username && errors.username}
+                                    variant="outlined"
+                                />
+                            </div>
 
-                        {/* Save Button */}
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            disabled={isSubmitting || loading}
-                            endIcon={isSubmitting || loading ? <CircularProgress size={20} color="inherit" /> : null}
-                            className="mt-6"
-                        >
-                            {isSubmitting || loading ? 'Saving...' : 'Save Profile'}
-                        </Button>
-                    </Form>
-                )}
+                            {/* Bio Field */}
+                            <div className="mb-4">
+                                <TextField
+                                    fullWidth
+                                    id="bio"
+                                    name="bio"
+                                    label="Bio"
+                                    value={values.bio}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={touched.bio && !!errors.bio}
+                                    helperText={touched.bio && errors.bio}
+                                    multiline
+                                    rows={4}
+                                    variant="outlined"
+                                />
+                            </div>
+
+                            {/* Gender Select */}
+                            <div className="mb-4">
+                                <FormControl fullWidth variant="outlined" error={touched.gender && !!errors.gender}>
+                                    <InputLabel id="gender-label">Gender</InputLabel>
+                                    <Select
+                                        labelId="gender-label"
+                                        id="gender"
+                                        name="gender"
+                                        value={values.gender}
+                                        onChange={(e) => {
+                                            handleChange(e); 
+                                            updateAvatarUrl(values.username, e.target.value);
+                                        }}
+                                        onBlur={handleBlur}
+                                        label="Gender"
+                                    >
+                                        <MenuItem value="male">Male</MenuItem>
+                                        <MenuItem value="female">Female</MenuItem>
+                                    </Select>
+                                    {touched.gender && errors.gender && <FormHelperText error>{touched.gender && errors.gender}</FormHelperText>}
+                                </FormControl>
+                            </div>
+
+                            {/* Save Button */}
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                fullWidth
+                                disabled={isSubmitting || loading}
+                                endIcon={isSubmitting || loading ? <CircularProgress size={20} color="inherit" /> : null}
+                                className="mt-6"
+                            >
+                                {isSubmitting || loading ? 'Saving...' : 'Save Profile'}
+                            </Button>
+                        </Form>
+                    );
+                }}
             </Formik>
         </Box>
     );

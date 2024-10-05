@@ -2,9 +2,16 @@ import { useState } from 'react';
 import LoginForm from "../components/forms/LoginForm";
 import RegisterForm from "../components/forms/RegisterForm";
 import AuthLayout from "../layouts/AuthLayout";
+import { useAuthStore } from '../store/useAuthStore';
+import { Navigate } from 'react-router-dom';
 
 const AuthPage = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const {user} = useAuthStore();
+
+    if(user) {
+        return <Navigate to={'/'}/> 
+    }
 
     const toggleForm = () => {
         setIsLogin(!isLogin);

@@ -1,7 +1,9 @@
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, CircularProgress } from '@mui/material';
+import { TextField, Button, CircularProgress, FormHelperText } from '@mui/material';
 import PasswordInput from './PasswordInput';
+import { useAuthStore } from '../../store/useAuthStore';
+import { toast } from 'react-toastify';
 
 const validationSchema = Yup.object({
     email: Yup.string().email('Invalid email').required('Email is required'),
@@ -9,18 +11,23 @@ const validationSchema = Yup.object({
 });
 
 const LoginForm = () => {
-
-    const handleSubmit = async (values: { email: string, password: string }, { setSubmitting, resetForm }: { setSubmitting: (isSubmitting: boolean) => void, resetForm: () => void }) => {
-        console.log(values);
-        setSubmitting(false);
-        resetForm();
-    }
+    const { login, error } = useAuthStore();
 
     return (
         <Formik
             initialValues={{ email: '', password: '' }}
             validationSchema={validationSchema}
-            onSubmit={handleSubmit}
+            onSubmit={async (values, {setSubmitting, resetForm}) => {
+                try {
+                    await login(values);
+                    resetForm(); 
+                } catch (err) {
+                    toast.error('This is a success message!');
+                    resetForm({values: {email : values.email, password: ''}});
+                } finally {
+                    setSubmitting(false);
+                }
+            }}
         >
             {({ isSubmitting, errors, touched, handleChange, handleBlur, values }) => (
                 <Form>
@@ -46,6 +53,7 @@ const LoginForm = () => {
                             error={touched.password && !!errors.password}
                             helperText={touched.password && errors.password}
                         />
+                        {error && <FormHelperText error>{error}</FormHelperText>}
                     </div>
 
                     <div>

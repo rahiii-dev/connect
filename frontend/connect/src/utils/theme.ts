@@ -2,7 +2,7 @@ import { createTheme } from '@mui/material/styles';
 
 const darkTheme = createTheme({
   palette: {
-    mode: 'dark', // Enable dark mode
+    mode: 'dark', 
     background: {
       default: '#1a1a2e', // Dark background
       paper: '#16213e', // Secondary background

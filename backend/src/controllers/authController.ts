@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import AuthService from '../services/authService';
 import { sendSuccessResponse } from '../utils/responseUtils';
 import { clearToken } from '../utils/jwtUtils';
-import asyncHandler from 'express-async-handler';
+import asyncHandler from '../utils/ayncHandler';
 
 class AuthController {
     /**
@@ -11,10 +11,9 @@ class AuthController {
      * @access  Public
      */
     register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-        const { fullName, email, password } = req.body;
+        const { email, password } = req.body;
 
-        const userData = await AuthService.register(fullName, email, password, res);
-
+        const userData = await AuthService.register(email, password, res);
         res.status(201).json(userData);
     });
 
@@ -23,12 +22,20 @@ class AuthController {
      * @desc    Login a user
      * @access  Public
      */
-    login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    login = asyncHandler(async (req: Request, res: Response) => {
         const { email, password } = req.body;
-
         const userData = await AuthService.login(email, password, res);
-
         res.status(200).json(userData);
+    });
+
+    /**
+     * @route   POST /auth/refresh-token
+     * @desc    refresh token
+     * @access  Public
+     */
+    refreshToken = asyncHandler(async (req: Request, res: Response): Promise<void | Response> => {
+        const token = await AuthService.refreshToken(req, res);
+        return res.status(200).json(token)
     });
 
     /**

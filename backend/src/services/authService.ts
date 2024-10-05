@@ -1,26 +1,24 @@
 import UserRepository from '../repositories/userRepository';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { IUser } from '../models/userModal';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwtUtils';
-import { comparePassword, hashPassword } from '../utils/passwordUtils';
+import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwtUtils';
+import AppError from '../utils/AppError';
+import { comparePassword } from '../utils/passwordUtils';
 
 class AuthService {
-    async register(fullName: string, email: string, password: string, res: Response): Promise<Partial<IUser> & { accessToken: string, refreshToken: string }> {
+    async register(email: string, password: string, res: Response): Promise<Partial<IUser> & { accessToken: string, refreshToken: string }> {
         const existingUser = await UserRepository.findByEmail(email);
         if (existingUser) {
-            throw new Error('User already exists');
+            throw new AppError('User already exists', 400);
         }
 
-        const hashedPassword = await hashPassword(password);
-        const user = await UserRepository.createUser({ fullName, email, password: hashedPassword });
+        const user = await UserRepository.createUser({ email, password });
 
         const accessToken = generateAccessToken(user._id, res);
         const refreshToken = generateRefreshToken(user._id, res);
 
-        const { password: pass, ...userData } = user.toObject();
-
         return {
-            ...userData,
+            ...user.toJSON(),
             accessToken,
             refreshToken
         };
@@ -29,23 +27,47 @@ class AuthService {
     async login(email: string, password: string, res: Response): Promise<Partial<IUser> & { accessToken: string, refreshToken: string }> {
         const user = await UserRepository.findByEmail(email);
         if (!user) {
-            throw new Error('Invalid email or password');
+            throw new AppError('Invalid email or password', 401);
         }
 
         const isMatch = await comparePassword(password, user.password);
         if (!isMatch) {
-            throw new Error('Invalid email or password');
+            throw new AppError('Invalid email or password', 401);
         }
 
         const accessToken = generateAccessToken(user._id, res);
         const refreshToken = generateRefreshToken(user._id, res);
 
-        const { password: pass, ...userData } = user.toObject();
-
         return {
-            ...userData,
+            ...user.toJSON(),
             accessToken,
             refreshToken
+        };
+    }
+
+    async refreshToken(req: Request, res: Response): Promise<{ accessToken: string, refreshToken?: string }> {
+        const refreshToken = req.cookies?.refreshToken || req.header('x-refresh-token');
+        
+        if (!refreshToken) {
+            throw new AppError('No refresh token provided', 403);
+        }
+
+        const decoded = verifyToken(refreshToken, 'refresh');
+        if (!decoded) {
+            throw new AppError('Invalid refresh token', 403);
+        }
+
+        const user = await UserRepository.findById(decoded.userId);
+        if (!user) {
+            throw new AppError('User not found', 404);
+        }
+
+        const accessToken = generateAccessToken(user._id, res);
+        const newRefreshToken = generateRefreshToken(user._id, res);
+
+        return {
+            accessToken,
+            refreshToken: newRefreshToken 
         };
     }
 }

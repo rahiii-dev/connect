@@ -1,7 +1,8 @@
+import { Types } from "mongoose";
 import User, { IUser } from "../models/userModal";
 
 class UserRepositoy {
-    async findById(id: string): Promise<IUser | null> {
+    async findById(id: string | Types.ObjectId): Promise<IUser | null> {
         return await User.findById(id);
     }
 

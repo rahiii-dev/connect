@@ -1,53 +1,27 @@
-import { Request, Response, NextFunction } from 'express';
-import { IUser } from '../models/userModal';
-import { generateAccessToken, verifyToken } from '../utils/jwtUtils';
+import { Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwtUtils';
 import UserRepository from '../repositories/userRepository';
 import { sendErrorResponse } from '../utils/responseUtils';
+import { AuthenticatedRequest } from '../types/auth';
+import { Types } from 'mongoose';
 
-interface AuthenticatedRequest extends Request {
-    user?: Partial<IUser>;
-}
-
-const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isAuthenticated = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
+        const accessToken = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
 
-        if (!token) {
-            return sendErrorResponse(res, {}, 'No access token found, authorization denied', 401);
-        }
-
-        const decoded = verifyToken(token, 'access');
-
-        if (decoded) {
-            
-            const user = await UserRepository.findById(decoded.userId);
-            if (!user) {
-                return sendErrorResponse(res, {}, 'User not found', 404);
+        if (accessToken) {
+            const decoded = verifyToken(accessToken, 'access');
+            if (decoded) {
+                const user = await fetchUser(decoded.userId, res);
+                if (user) {
+                    req.user = user;
+                    return next();
+                }
+                return;
             }
-            req.user = user;
-            return next();
-        }
+        } 
 
-        const refreshToken = req.cookies?.refreshToken || req.header('x-refresh-token');
-
-        if (!refreshToken) {
-            return sendErrorResponse(res, {}, 'No refresh token found, please log in again', 401);
-        }
-
-        const refreshDecoded = verifyToken(refreshToken, 'refresh');
-        if (!refreshDecoded) {
-            return sendErrorResponse(res, {}, 'Invalid refresh token', 403);
-        }
-
-        generateAccessToken(refreshDecoded.userId, res);
-
-        const user = await UserRepository.findById(refreshDecoded.userId);
-        if (!user) {
-            return sendErrorResponse(res, {}, 'User not found', 404);
-        }
-
-        req.user = user;
-        next();
+        return sendErrorResponse(res, {}, 'No valid token found, please log in again', 401);
     } catch (error: unknown) {
         if (error instanceof Error) {
             sendErrorResponse(res, error, 'Unauthorized: ' + error.message, 401);
@@ -57,4 +31,13 @@ const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: Ne
     }
 };
 
-export default authMiddleware;
+async function fetchUser(userId: string | Types.ObjectId, res: Response) {
+    const user = await UserRepository.findById(userId);
+    if (!user) {
+        sendErrorResponse(res, {}, 'User not found', 404);
+        return null;
+    }
+    return user;
+}
+
+export default isAuthenticated;

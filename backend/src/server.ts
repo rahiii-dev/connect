@@ -2,6 +2,8 @@ import express from 'express';
 import connectDB from './config/db';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import errorHandler, { notFound } from './middleware/errorMIddleware';
 
 dotenv.config();
@@ -16,8 +18,14 @@ if (process.env.NODE_ENV === 'production') {
   app.use(morgan('dev'));
 }
 
+app.use(cors({
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000', 
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
+app.use(cookieParser())
 
 // Routes
 
@@ -26,17 +34,19 @@ connectDB();
 
 // Root Route
 import authRoutes from './routes/authRoutes';
+import profileRoutes from './routes/profileRoutes';
 
 app.get('/', (req, res) => {
   if (process.env.NODE_ENV === 'development') {
-    res.json('Chat Box is on Developing Mode 💻');
+    res.json('Connect is on Developing Mode 💻');
 
   } else {
-    res.json('Chat Box is Online :)');
+    res.json('Connect is Online :)');
   }
 });
 
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
