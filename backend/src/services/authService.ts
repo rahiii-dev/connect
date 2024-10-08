@@ -27,12 +27,12 @@ class AuthService {
     async login(email: string, password: string, res: Response): Promise<Partial<IUser> & { accessToken: string, refreshToken: string }> {
         const user = await UserRepository.findByEmail(email);
         if (!user) {
-            throw new AppError('Invalid email or password', 401);
+            throw new AppError('Invalid email or password', 404);
         }
 
         const isMatch = await comparePassword(password, user.password);
         if (!isMatch) {
-            throw new AppError('Invalid email or password', 401);
+            throw new AppError('Invalid email or password', 404);
         }
 
         const accessToken = generateAccessToken(user._id, res);

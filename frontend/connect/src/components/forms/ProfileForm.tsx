@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Avatar, Button, TextField, Box, CircularProgress, MenuItem, FormControl, InputLabel, Select, FormHelperText } from '@mui/material';
+import { Avatar, Button, TextField, Box, CircularProgress, MenuItem, FormControl, InputLabel, Select, FormHelperText, debounce } from '@mui/material';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { AVATAR_URL } from '../../utils/constants';
 import { verifyUsername } from '../../api/profile';
 import { useProfileStore } from '../../store/useProfileStore';
+import imageUploader from '../../api/imageUpload';
 
 // Validation Schema
 const ProfileSchema = Yup.object().shape({
     username: Yup.string().required('Username is required')
         .min(3, 'Username must be at least 3 characters')
         .max(10, "Username can't be more than 10 characters")
-        .matches(/^[A-Za-z0-9](?!.*__)[A-Za-z0-9_.]*$/, 'Username can only contain alphabets, numbers, underscores, and dots, and cannot start with an underscore')
-        .test('checkUsernameExists', 'Username already exists', async (value) => {
-            if (!value) return true; 
-            const response = await verifyUsername(value);
-            return !response.exists;
-        }),
+        .matches(/^[A-Za-z0-9](?!.*__)[A-Za-z0-9_.]*$/, 'Username can only contain alphabets, numbers, underscores, and dots, and cannot start with an underscore'),
     bio: Yup.string().max(160, 'Bio must be at most 160 characters'),
     gender: Yup.string().required('Gender is required'),
 });
@@ -26,7 +22,7 @@ const ProfileForm = () => {
     const [avatar, setAvatar] = useState(profile?.avatarUrl || AVATAR_URL);
     const [avatarLoading, setAvatarLoading] = useState(false);
     const [imageSelected, setImageSelected] = useState(false);
-    const [imageChanged, setImageChanged] = useState(false);
+    const [image, setImage] = useState<File | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files ? e.target.files[0] : null;
@@ -34,7 +30,7 @@ const ProfileForm = () => {
             const newAvatarUrl = URL.createObjectURL(file);
             setAvatar(newAvatarUrl); 
             setImageSelected(true);
-            setImageChanged(true)
+            setImage(file);
         }
     };
 
@@ -50,21 +46,30 @@ const ProfileForm = () => {
     const handleImageLoad = () => setAvatarLoading(false);
     const handleImageError = () => setAvatarLoading(false);
 
+    const checkUsername = debounce(async (username: string, setFieldError: Function) => {
+        if (username.length >= 3) {
+            const response = await verifyUsername(username);
+            if (response.exists) {
+                setFieldError('username', 'Username already exists');
+            }
+        }
+    }, 500);
+
     return (
         <Box component={'section'} className="flex flex-col items-center w-full lg:w-1/2 min-h-[100vh] py-10 mx-auto shadow-lg rounded-md">
             <div className='mb-6'>
                 <div className="relative w-max mx-auto mb-1">
                     {avatarLoading && <CircularProgress size={120} thickness={2} className="absolute" />}
-                        <Avatar
-                            src={avatar}
-                            alt="Profile Avatar"
-                            sx={{ width: 120, height: 120, opacity: avatarLoading ? 0 : 1 }} 
-                            className="shadow-md border-4 border-blue-accent"
-                            imgProps={{
-                                onLoad: handleImageLoad, 
-                                onError: handleImageError 
-                            }}
-                        />
+                    <Avatar
+                        src={avatar}
+                        alt="Profile Avatar"
+                        sx={{ width: 120, height: 120, opacity: avatarLoading ? 0 : 1 }} 
+                        className="shadow-md border-4 border-blue-accent"
+                        imgProps={{
+                            onLoad: handleImageLoad, 
+                            onError: handleImageError 
+                        }}
+                    />
                     <input
                         accept="image/*"
                         type="file"
@@ -83,13 +88,16 @@ const ProfileForm = () => {
                 }}
                 validationSchema={ProfileSchema}
                 onSubmit={async (values, { setSubmitting }) => {
-                     setSubmitting(true);
-                     await createOrUpdateProfile({ ...values, avatarUrl: avatar, gender: values.gender === 'male' ? 'male' : 'female' });
-                     setSubmitting(false);
+                    setSubmitting(true);
+                    let avatarUrl = avatar;
+                    if (image) {
+                        avatarUrl = await imageUploader(image);
+                    }
+                    await createOrUpdateProfile({ ...values, avatarUrl, gender: values.gender === 'male' ? 'male' : 'female' });
+                    setSubmitting(false);
                 }}
             >
-                {({ values, errors, touched, handleChange, handleBlur, isSubmitting, setValues }) => {
-
+                {({ values, errors, touched, handleChange, handleBlur, isSubmitting, setValues, setFieldError }) => {
                     useEffect(() => {
                         if (profile) {
                             setValues({
@@ -98,9 +106,16 @@ const ProfileForm = () => {
                                 gender: profile.gender || '',
                             });
                             setAvatar(profile.avatarUrl || AVATAR_URL);
-                            setImageSelected(true)
+                            setImageSelected(true);
                         }
-                    }, [profile, setValues]); 
+                    }, [profile, setValues]);
+
+                    const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        handleChange(e); 
+                        const newUsername = e.target.value;
+                        checkUsername(newUsername, setFieldError); 
+                        updateAvatarUrl(newUsername, values.gender); 
+                    };
 
                     return (
                         <Form className="w-full space-y-4">
@@ -111,10 +126,7 @@ const ProfileForm = () => {
                                     name="username"
                                     label="Username"
                                     value={values.username}
-                                    onChange={(e) => {
-                                        handleChange(e); 
-                                        updateAvatarUrl(e.target.value, values.gender); 
-                                    }}
+                                    onChange={handleUsernameChange}
                                     onBlur={handleBlur}
                                     error={touched.username && !!errors.username}
                                     helperText={touched.username && errors.username}
@@ -181,6 +193,6 @@ const ProfileForm = () => {
             </Formik>
         </Box>
     );
-}
+};
 
 export default ProfileForm;

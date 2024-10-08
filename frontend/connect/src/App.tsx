@@ -23,7 +23,7 @@ function App() {
       <Routes>
         {/* protected */}
         <Route path='/' element={<Protected><ChatPage /></Protected>} />
-        <Route path='/profile' element={<Protected><ProfilePage /></Protected>} />
+        <Route path='/profile' element={<ProfilePage />} />
         {/* not protected */}
         <Route path='/auth' element={<AuthPage />} />
         <Route path='*' element={<NotFoundPage />} />

@@ -4,6 +4,7 @@ import { TextField, Button, CircularProgress, FormHelperText } from '@mui/materi
 import PasswordInput from './PasswordInput';
 import { useAuthStore } from '../../store/useAuthStore';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
     email: Yup.string().email('Invalid email').required('Email is required'),
@@ -12,6 +13,7 @@ const validationSchema = Yup.object({
 
 const LoginForm = () => {
     const { login, error } = useAuthStore();
+    const navigate = useNavigate();
 
     return (
         <Formik
@@ -21,6 +23,7 @@ const LoginForm = () => {
                 try {
                     await login(values);
                     resetForm(); 
+                    navigate('/');
                 } catch (err) {
                     toast.error('This is a success message!');
                     resetForm({values: {email : values.email, password: ''}});

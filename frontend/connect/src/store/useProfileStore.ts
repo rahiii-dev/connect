@@ -22,12 +22,9 @@ export const useProfileStore = create<ProfileState>((set) => ({
         set({ loading: true });
         try {
             const userProfile = await getUserProfile();
-            if (userProfile) {
-                set({ profile: userProfile })
-            }
-            set({ status: 'success', error: null })
+            set({ profile: userProfile, status: 'success', error: null })
         } catch (error) {
-            set({ status: 'error', error: handleError(error, 'Failed to fetch user') })
+            set({ error: handleError(error, 'Failed to fetch user') })
         } finally {
             set({ loading: false });
         }
