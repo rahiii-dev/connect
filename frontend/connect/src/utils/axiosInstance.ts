@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { SERVER_ORIGIN } from './constants';
 import { useAuthStore } from '../store/useAuthStore';
+import { toast } from 'sonner';
 
 const axiosInstance = axios.create({
   baseURL: SERVER_ORIGIN,
@@ -35,6 +36,15 @@ axiosInstance.interceptors.response.use(
 
     if (error.response && error.response.status === 403){
       await logout()
+      toast.error('Session Expired', {
+        description: 'Please login again'
+      })
+    }
+
+    if (error.response && error.response.status > 500){
+      toast.error('Server Down', {
+        description: 'Please try after sometime.'
+      })
     }
 
     return Promise.reject(error); 

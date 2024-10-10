@@ -9,9 +9,6 @@ const isAuthenticated = async (req: AuthenticatedRequest, res: Response, next: N
     try {
         const accessToken = req.cookies?.accessToken || req.header('Authorization')?.replace('Bearer ', '');
 
-        console.log("Token: ", accessToken);
-        
-
         if (accessToken) {
             const decoded = verifyToken(accessToken, 'access');
             if (decoded) {

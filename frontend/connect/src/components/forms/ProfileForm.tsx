@@ -6,6 +6,7 @@ import { AVATAR_URL } from '../../utils/constants';
 import { verifyUsername } from '../../api/profile';
 import { useProfileStore } from '../../store/useProfileStore';
 import imageUploader from '../../api/imageUpload';
+import { toast } from 'sonner';
 
 // Validation Schema
 const ProfileSchema = Yup.object().shape({
@@ -89,12 +90,26 @@ const ProfileForm = () => {
                 validationSchema={ProfileSchema}
                 onSubmit={async (values, { setSubmitting }) => {
                     setSubmitting(true);
-                    let avatarUrl = avatar;
-                    if (image) {
-                        avatarUrl = await imageUploader(image);
+                    try {
+                        let avatarUrl = avatar;
+                        
+                        if (image) {
+                            avatarUrl = await imageUploader(image);
+                        }
+                        
+                        await createOrUpdateProfile({ 
+                            ...values, 
+                            avatarUrl, 
+                            gender: values.gender === 'male' ? 'male' : 'female' 
+                        });
+                        toast.success('Profile Updated.');
+                    } catch (error) {
+                        toast.error('Failed updating the profile.', {
+                            description: 'Please try again.'
+                        });
+                    } finally {
+                        setSubmitting(false);
                     }
-                    await createOrUpdateProfile({ ...values, avatarUrl, gender: values.gender === 'male' ? 'male' : 'female' });
-                    setSubmitting(false);
                 }}
             >
                 {({ values, errors, touched, handleChange, handleBlur, isSubmitting, setValues, setFieldError }) => {

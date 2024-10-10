@@ -15,7 +15,7 @@ const Protected = ({ children }: ProtectedProp) => {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (profileStatus === 'idle') {
+      if (profileStatus === 'idle' && user) {
         await fetchProfile();
       }
     };

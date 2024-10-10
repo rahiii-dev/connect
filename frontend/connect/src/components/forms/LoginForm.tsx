@@ -3,7 +3,6 @@ import * as Yup from 'yup';
 import { TextField, Button, CircularProgress, FormHelperText } from '@mui/material';
 import PasswordInput from './PasswordInput';
 import { useAuthStore } from '../../store/useAuthStore';
-import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const validationSchema = Yup.object({
@@ -25,7 +24,6 @@ const LoginForm = () => {
                     resetForm(); 
                     navigate('/');
                 } catch (err) {
-                    toast.error('This is a success message!');
                     resetForm({values: {email : values.email, password: ''}});
                 } finally {
                     setSubmitting(false);
