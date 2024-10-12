@@ -1,15 +1,21 @@
 import { Avatar, Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatProfileProps {
   avatarUrl: string;
   username: string;
   lastMessage?: string; 
-  isOnline?: boolean;  
+  isOnline?: boolean;
+  chatId: string;  
 }
 
-const ChatProfile = ({ avatarUrl, username, lastMessage, isOnline }: ChatProfileProps) => {
+const ChatProfile = ({ avatarUrl, username, lastMessage, isOnline, chatId }: ChatProfileProps) => {
+  const navigate = useNavigate();
+
   return (
-    <Box className="flex items-center gap-3 p-3 hover:bg-dark-secondary cursor-pointer transition-colors duration-200">
+    <div
+       onClick={() => navigate(`/?chat=${chatId}`)}
+       className="flex items-center gap-3 p-3 hover:bg-dark-secondary cursor-pointer transition-colors duration-200">
       <div className="relative">
         <Avatar src={avatarUrl} alt={`${username}'s avatar`} sx={{ width: 48, height: 48 }} />
         {isOnline && (
@@ -23,7 +29,7 @@ const ChatProfile = ({ avatarUrl, username, lastMessage, isOnline }: ChatProfile
           <Typography className="text-gray-500 text-xs truncate w-48">{lastMessage}</Typography>
         )}
       </Box>
-    </Box>
+    </div>
   );
 }
 

@@ -13,7 +13,7 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
         if (message.trim()) {
             alert(message)
             onSendMessage?.(message.trim());
-            setMessage(''); // Clear the input after sending
+            setMessage(''); 
         }
     };
 

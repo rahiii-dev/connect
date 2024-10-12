@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     return (
         <div className="flex flex-col lg:flex-row h-screen overflow-hidden">
-            {/* Left side with Lottie animation */}
+            {/* Left side */}
             <div className="hidden lg:block lg:w-1/2 h-full">
                 <div className="flex flex-col justify-center items-center py-10 h-full">
                     <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-blue-gradient tracking-wide drop-shadow-lg">
@@ -22,7 +22,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                 </div>
             </div>
 
-            {/* Right side with children (form) */}
+            {/* Right side (form) */}
             <div className="flex items-center justify-center h-full w-full lg:w-1/2 p-8">
                 <div className="w-full max-w-md">
                     {children}

@@ -49,7 +49,7 @@ const ChatSidebar = () => {
             </div>
             <div className="flex-grow overflow-y-scroll overflow-x-hidden custom-scrollbar">
                 {dummyProfiles.map((profile, index) => (
-                    <ChatProfile key={index} username={profile.username} avatarUrl={AVATAR_URL} isOnline={profile.isOnline} lastMessage={profile.lastMessage} />
+                    <ChatProfile key={index} chatId={`${index}`} username={profile.username} avatarUrl={AVATAR_URL} isOnline={profile.isOnline} lastMessage={profile.lastMessage} />
                 ))}
             </div>
 
