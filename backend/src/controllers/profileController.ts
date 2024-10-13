@@ -43,6 +43,17 @@ class ProfileController {
         const exists = await ProfileService.verifyUsername(username, req.user?._id!);
         res.status(200).json({ exists });
     });
+
+    /**
+     * @route   GET /profile/search/:username
+     * @desc    list users if username exists
+     * @access  Private
+     */
+    searchUsers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const { username } = req.params;
+        const users = await ProfileService.searchUsers(username, req.user?._id!);
+        res.status(200).json(users);
+    });
 }
 
 export default new ProfileController();

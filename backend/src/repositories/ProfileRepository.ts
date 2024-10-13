@@ -36,6 +36,12 @@ class ProfileRepository {
             runValidators: true,
         });
     }
+
+    async listProfiles(username: string, userId: string | Types.ObjectId, limit=10): Promise<IProfile[]> {
+        const profiles = await Profile.find({ user: {$ne : userId}, username: { $regex: username, $options: 'i' } }).limit(limit);
+        return profiles || [];
+    }
+    
 }
 
 export default new ProfileRepository();

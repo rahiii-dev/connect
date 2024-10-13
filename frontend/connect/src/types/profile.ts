@@ -11,5 +11,6 @@ export interface ProfileResponse {
     username: string, 
     bio: string, 
     gender: 'male' | 'female', 
-    avatarUrl: string
+    avatarUrl: string,
+    isOnline?: boolean
 }

@@ -37,6 +37,12 @@ const setupSocket = (httpServer:  http.Server<typeof http.IncomingMessage, typeo
         });
 
         // 2) private-message-to user
+        socket.on('private-message', async ({ recipientId, content }) => {
+            const message = await chatService.sendMessage(userId, recipientId, content);
+    
+            socket.emit('message-sent', message);
+            io.to(recipientId).emit('message-received', message);
+        });
         // if its their first chat create a uniquye chat with id
         // else retrieve messages using chat id
         // send and recieve messages

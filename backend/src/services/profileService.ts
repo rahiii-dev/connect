@@ -70,6 +70,15 @@ class ProfileService {
             throw new AppError('Failed to verify username', 500)
         }
     }
+
+    // searchUsers
+    async searchUsers(username: string, userId: string | Types.ObjectId): Promise<IProfile[]> {
+        try {
+            return await ProfileRepository.listProfiles(username, userId)
+        } catch (error) {
+            throw new AppError('Failed to searhc users', 500)
+        }
+    }
 }
 
 export default new ProfileService();

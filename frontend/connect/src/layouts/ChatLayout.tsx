@@ -11,25 +11,26 @@ const ChatLayout = () => {
   const chatId = searchParams.get('chat');
 
   useEffect(() => {
-    if(chatId){
+    if (chatId) {
       setIsChatOpen(true);
     } else {
       setIsChatOpen(false)
     }
-    
+
   }, [chatId]);
 
+  
   return (
     <Box component={'section'} className="relative h-screen overflow-hidden flex">
       {/* Sidebar */}
-      <Box 
+      <Box
         component="aside"
         width={isLargeScreen ? '300px' : '100%'}
         display={isChatOpen && !isLargeScreen ? 'none' : 'block'}
         overflow="hidden"
         className="h-full"
       >
-        <ChatSidebar/>
+        <ChatSidebar />
       </Box>
 
       {/* Chat Container */}
@@ -46,7 +47,7 @@ const ChatLayout = () => {
           opacity: isLargeScreen ? 1 : isChatOpen ? 1 : 0,
         }}
       >
-        <ChatContainer/>
+        <ChatContainer />
       </Box>
     </Box>
   );
