@@ -6,16 +6,17 @@ interface ChatProfileProps {
   username: string;
   lastMessage?: string; 
   isOnline?: boolean;
-  chatId: string;  
+  chatId: string;
+  active: boolean;  
 }
 
-const ChatProfile = ({ avatarUrl, username, lastMessage, isOnline, chatId }: ChatProfileProps) => {
+const ChatProfile = ({ avatarUrl, username, lastMessage, isOnline, chatId, active }: ChatProfileProps) => {
   const navigate = useNavigate();
 
   return (
     <div
        onClick={() => navigate(`/?chat=${chatId}`)}
-       className="flex items-center gap-3 p-3 hover:bg-dark-secondary cursor-pointer transition-colors duration-200">
+       className={`flex items-center gap-3 p-3 ${active ? 'bg-dark-secondary' : ''} hover:bg-dark-secondary cursor-pointer transition-colors duration-200`}>
       <div className="relative">
         <Avatar src={avatarUrl} alt={`${username}'s avatar`} sx={{ width: 48, height: 48 }} />
         {isOnline && (

@@ -11,9 +11,7 @@ const ChatContainer = () => {
     const chatId = searchParams.get('chat');
     const isSmallScreen = useMediaQuery('(max-width: 1024px)');
 
-    console.log("Current chatId:", chatId); // Check what chatId is
     if (!chatId) {
-        console.log("Rendering EmptyChat");
         return <EmptyChat />;
     }
     const padx = 'px-4';

@@ -29,6 +29,13 @@ class ProfileRepository {
             runValidators: true,
         });
     }
+
+    async updateOnlineStatus(userId: string | Types.ObjectId, status: boolean): Promise<IProfile | null> {
+        return await Profile.findOneAndUpdate({user: userId}, {isOnline: status}, {
+            new: true,
+            runValidators: true,
+        });
+    }
 }
 
 export default new ProfileRepository();

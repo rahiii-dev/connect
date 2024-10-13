@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import errorHandler, { notFound } from './middleware/errorMIddleware';
+import http from 'http';
+import setupSocket from './sockets/socket';
 
 dotenv.config();
 
@@ -32,6 +34,9 @@ app.use(cookieParser())
 // Database
 connectDB();
 
+const httpServer = http.createServer(app);
+setupSocket(httpServer);
+
 // Root Route
 import authRoutes from './routes/authRoutes';
 import profileRoutes from './routes/profileRoutes';
@@ -52,6 +57,6 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

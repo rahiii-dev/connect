@@ -8,6 +8,7 @@ export interface IProfile extends Document {
     bio: string;
     gender: 'male' | 'female';
     avatarUrl: string;
+    isOnline : boolean;
 }
 
 const profileSchema = new Schema<IProfile>(
@@ -44,6 +45,9 @@ const profileSchema = new Schema<IProfile>(
             type: String,
             required: [true, "Avatar URL is required"],  
         },
+        isOnline: {
+            type: Boolean
+        }
     },
     {
         timestamps: true,

@@ -4,33 +4,35 @@ import { AVATAR_URL } from "../../utils/constants";
 import Logo from "../Logo";
 import ChatProfile from "./ChatProfile";
 import { Logout, Search } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
 import { toast } from "sonner";
-import { useState } from "react";
-
-const dummyProfiles = [
-    { username: "john_doe", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Hey, how's it going?" },
-    { username: "jane_smith", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "See you later!" },
-    { username: "samuel23", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "I'm on my way." },
-    { username: "karenM", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "Can we reschedule?" },
-    { username: "mike_87", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Just finished the task." },
-    { username: "emma_w", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Thanks for the update." },
-    { username: "david_L", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "I'll call you later." },
-    { username: "lucas_k", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Let's meet up tomorrow." },
-    { username: "olivia_w", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Got it, thanks!" },
-    { username: "noah_h", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "Please check your email." },
-    { username: "sophia_A", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "I'll be there soon." },
-    { username: "liam_n", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "Catch you later." },
-    { username: "mia_s", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "Yes, that's fine." },
-    { username: "benjamin_b", avatarUrl: AVATAR_URL, isOnline: false, lastMessage: "Sounds good to me!" },
-    { username: "ava_r", avatarUrl: AVATAR_URL, isOnline: true, lastMessage: "See you at 5!" }
-];
+import { useEffect, useState } from "react";
+import { useSocket } from "../SocketContext";
+import { InboxChat } from "../../types/chat";
 
 const ChatSidebar = () => {
+    const socket = useSocket();
     const { logout } = useAuthStore();
     const { profile } = useProfileStore();
     const [loggingOut, setLoggingOut] = useState(false);
+    const [inbox, setInbox] = useState<InboxChat[]>([]);
+    const [searchParams] = useSearchParams();
+    const chatId = searchParams.get('chat');
+
+    useEffect(() => {
+        if (socket) {
+            socket.emit('get-inbox');
+
+            socket.on('inbox', (inboxData: InboxChat[]) => {
+                setInbox(inboxData);
+            });
+        }
+
+        return () => {
+            socket?.off('inbox');
+        };
+    }, [socket]);
 
     const handleLogout = async () => {
         setLoggingOut(true)
@@ -48,9 +50,25 @@ const ChatSidebar = () => {
                 </div>
             </div>
             <div className="flex-grow overflow-y-scroll overflow-x-hidden custom-scrollbar">
-                {dummyProfiles.map((profile, index) => (
-                    <ChatProfile key={index} chatId={`${index}`} username={profile.username} avatarUrl={AVATAR_URL} isOnline={profile.isOnline} lastMessage={profile.lastMessage} />
-                ))}
+                {inbox.length > 0 ? (
+                    inbox.map((chat, index) => (
+                        <ChatProfile
+                            key={index}
+                            active={chatId === chat.chatId}
+                            chatId={chat.chatId}
+                            username={chat.username}
+                            avatarUrl={chat.avatarUrl || AVATAR_URL}
+                            isOnline={chat.isOnline}
+                            lastMessage={chat.lastMessage}
+                        />
+                    ))
+                ) : (
+                    <div className="h-full flex flex-col justify-center items-center gap-2 text-center">
+                        <p className="text-xl font-semibold text-gray-500">No conversation yet!!</p>
+                        <p className="text-lg text-gray-400">Start <span className="text-blue-accent">connecting</span> by finding users</p>
+                    </div>
+
+                )}
             </div>
 
             <div className="p-2 bg-dark-secondary flex items-center gap-4">
